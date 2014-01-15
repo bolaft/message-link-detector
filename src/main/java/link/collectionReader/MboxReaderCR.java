@@ -1,12 +1,17 @@
 package link.collectionReader;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.Iterator;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mime4j.mboxiterator.CharBufferWrapper;
@@ -97,7 +102,7 @@ public class MboxReaderCR extends JCasCollectionReader_ImplBase {
 
 		//Message-Id: ou Message-ID:
 		String messageId = "Message-I";
-		int start = documentText.indexOf(messageId) +messageId.length() + 2;
+		int start = documentText.indexOf(messageId) + messageId.length() + 2;
 		int end = documentText.indexOf("\n",start);
 		String url = documentText.substring(start, end).trim();
 		// to remove < and >

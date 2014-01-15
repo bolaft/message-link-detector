@@ -6,7 +6,6 @@ package link.workflow;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 import static org.apache.uima.fit.factory.ExternalResourceFactory.createExternalResourceDescription;
-
 import link.analysisEngine.CollocationNetworkBuilderAE;
 import link.analysisEngine.WordSegmenterAE;
 import link.collectionReader.ZimReaderCR;
@@ -25,6 +24,7 @@ import org.apache.uima.resource.ExternalResourceDescription;
 public class CollocationNetworkBuilderWF {
 
 	public static void main(String[] args) throws Exception {
+		System.out.printf("%s - started...\n", CollocationNetworkBuilderWF.class.getName());
 		
 		// Creation of the external resource description
 		ExternalResourceDescription stopWordsResourceDesc = createExternalResourceDescription(
@@ -34,28 +34,20 @@ public class CollocationNetworkBuilderWF {
 	
 		ExternalResourceDescription collocationNetworkResourceDesc = createExternalResourceDescription(
 			CollocationNetworkModel.class,
-			"file:tmp/collocation-network.csv"
+			"file:data/collocation-network.csv"
 		);
 		
 		// Binding external resource to each Annotator individually
 		AnalysisEngineDescription wordSegmenterAED = createEngineDescription(
 			WordSegmenterAE.class, 
-			WordSegmenterAE.RES_KEY, 
-			stopWordsResourceDesc
+			WordSegmenterAE.RES_KEY, stopWordsResourceDesc
 		);
 
 		AnalysisEngineDescription collocationNetworkBuilderAED = createEngineDescription(
 			CollocationNetworkBuilderAE.class, 
-			CollocationNetworkBuilderAE.RES_KEY,
-			collocationNetworkResourceDesc, 
+			CollocationNetworkBuilderAE.RES_KEY, collocationNetworkResourceDesc, 
 			CollocationNetworkBuilderAE.PARAM_RESOURCE_DEST_FILE, "tmp/collocation-network.csv"
 		);
-		
-		// AnalysisEngineDescription aed4 = createEngineDescription(
-		//	JCasFSWriterAE.class,
-		//	JCasFSWriterAE.PARAM_DESTDIRNAME, "tmp/doc.txt",
-		//	JCasFSWriterAE.PARAM_DESTFILEEXTENSION,	".txt"
-		// );
 		
 		// Check the external resource was injected
 		AnalysisEngineDescription aed = createEngineDescription(wordSegmenterAED, collocationNetworkBuilderAED);
@@ -71,7 +63,7 @@ public class CollocationNetworkBuilderWF {
 		
 		// Run the pipeline
 		SimplePipeline.runPipeline(crd, aed);
-		System.out.println("Complete.");
+		System.out.printf("%s - done\n", CollocationNetworkBuilderWF.class.getName());
 	}
 	
 }

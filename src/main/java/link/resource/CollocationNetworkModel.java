@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.uima.resource.DataResource;
 import org.apache.uima.resource.SharedResourceObject;
@@ -20,23 +21,25 @@ public class CollocationNetworkModel implements CollocationNetworkModelInterface
 	/**
 	 * Increments the collocation value of a pair of words 
 	 */
-	public void increment(String word, String colWord, boolean lookBack) {
-		if (collocationMap.containsKey(word)){
-			Map<String, Integer> wordMap = collocationMap.get(word);
+	public void increment(String head, String word, boolean lookBack) {
+		// System.out.printf("+1 \"%s\", \"%s\"\n", word, colWord);
+		
+		if (collocationMap.containsKey(head)){
+			Map<String, Integer> wordMap = collocationMap.get(head);
 			
-			if (wordMap.containsKey(colWord)){
-				wordMap.put(colWord, wordMap.get(colWord) + 1);
+			if (wordMap.containsKey(word)){
+				wordMap.put(word, wordMap.get(word) + 1);
 			} else {
-				wordMap.put(colWord, 1);
+				wordMap.put(word, 1);
 			}
 		} else {
 			Map<String, Integer> initMap = new HashMap<String, Integer>();
-			initMap.put(colWord, 1);
-			collocationMap.put(word, initMap);
+			initMap.put(word, 1);
+			collocationMap.put(head, initMap);
 		}
 		
 		if (lookBack) {
-			increment(colWord, word, false);
+			increment(word, head, false);
 		}
 	}
 	
@@ -52,29 +55,37 @@ public class CollocationNetworkModel implements CollocationNetworkModelInterface
 	}
 	
 	/**
-	 * If the collocation map was not loaded, saves it to file
+	 * Saves the collocation network to file
 	 */
-	public synchronized void save(String filename, Integer min) {
-		if (!loaded) {
-			String csv = "";
-
-			for (Entry<String, Map<String, Integer>> entry : collocationMap.entrySet()){
-			    for (Entry<String, Integer> subEntry : entry.getValue().entrySet()){
-			    	if (subEntry.getValue() >= min) csv += entry.getKey() + "\t" + subEntry.getKey() + "\t" + subEntry.getValue() + "\n";
-			    }
+	public synchronized void save(String filename, Integer minCol, Integer minSize) {
+		System.out.printf("%s - saving map to %s...\n", getClass().getName(), filename);
+		
+		StringBuilder sb = new StringBuilder();
+		
+		for (String head : collocationMap.keySet()) {
+			for (String word : collocationMap.get(head).keySet()) {
+				int val = collocationMap.get(head).get(word);
+				if (val >= minCol && head.length() >= minSize) {
+					sb.append(head).append('\t').append(word).append('\t').append(collocationMap.get(head).get(word)).append('\n');
+				}
 			}
-			
-			MiscUtil.writeToFS(csv, filename);
 		}
+		
+		MiscUtil.writeToFS(sb.toString(), filename);
+		
+		System.out.printf("%s - map successfuly saved to file\n", getClass().getName());
 	}
 
 	/**
 	 * Attempts to load the collocation map from file
 	 */
 	public void load(DataResource aData) {
+		String errorMsg = "%s - map could not be loaded\n";
+		String successMsg = "%s - map loaded\n";
+		
+		System.out.printf("%s - loading map from %s...\n", getClass().getName(), aData.getUrl().getFile());
+		
 		InputStream inStr = null;
-		String errorMsg = "CollocationNetworkModel - map could not be loaded from file ; will proceed with building from scratch.";
-		String successMsg = "CollocationNetworkModel - map successfuly loaded from file";
 		
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(aData.getInputStream()));
@@ -95,11 +106,11 @@ public class CollocationNetworkModel implements CollocationNetworkModelInterface
                 }
 			}
 			
-			System.out.println(successMsg);
+			System.out.printf(successMsg, getClass().getName());
 		} catch (IOException e) {
-			System.out.println(errorMsg);
+			System.out.printf(errorMsg, getClass().getName());
 		} catch (NullPointerException e) {
-			System.out.println(errorMsg);
+			System.out.printf(errorMsg, getClass().getName());
 		} finally {
 			if (inStr != null) {
 				try {
@@ -109,11 +120,28 @@ public class CollocationNetworkModel implements CollocationNetworkModelInterface
 		}
 	}
 
-	/**
-	 * Checks if the collocation map was loaded
-	 */
-	public boolean isLoaded() {
-		return loaded;
+	@Override
+	public boolean check(String word, Set<String> set, Integer threshold) {
+		int sum = 0;
+		
+		for (String head : set) {
+			if (collocationMap.containsKey(head) && collocationMap.get(head).containsKey(word)) {
+				sum += collocationMap.get(head).get(word);
+			}
+		}
+		
+		if (sum / set.size() >= threshold) return true;
+		
+		return false;
+	}
+
+	@Override
+	public boolean check(String word1, String word2, Integer min) {
+		if (collocationMap.containsKey(word1) 
+				&& collocationMap.get(word1).containsKey(word2) 
+				&& collocationMap.get(word1).get(word2) >= min) return true;
+		
+		return false;
 	}
 	
 }

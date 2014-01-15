@@ -92,8 +92,12 @@ public class ZimReaderCR extends JCasCollectionReader_ImplBase {
 		if (articleUrlList == null) return false;
 
 		if (articleUrlIndex == articleUrlList.size())  {
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) { }
+			
 			System.err.printf(
-				"%s read %d articles of %s but only %d html with %d non null",
+				"%s read %d articles of %s but only %d html with %d non null \n",
 				getClass().getSimpleName(),
 				zimFile.getArticleCount(),
 				zimFile.getName(), 

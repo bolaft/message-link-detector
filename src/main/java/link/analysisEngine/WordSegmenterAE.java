@@ -9,17 +9,15 @@ import java.util.regex.Pattern;
 import link.resource.StopWordModelInterface;
 
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
-import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.jcas.JCas;
-
 import common.types.Token;
 
 /**
  * Annotator that segments the text into words and filter the one present 
  * in a stop word set
  */
-public class WordSegmenterAE extends JCasAnnotator_ImplBase {
+public class WordSegmenterAE extends linkJCasAnnotator {
 	final static String WORD_SEPARATOR_PATTERN = "[^\\s\\p{Punct}\\d]+"; //"[^\\s\\.:,'\\(\\)!]+";
 
 	// TODO add http://www.w3.org/TR/html-markup/elements.html
@@ -37,4 +35,5 @@ public class WordSegmenterAE extends JCasAnnotator_ImplBase {
 			if (!stopWords.contains(matcher.group().toLowerCase())) new Token(aJCas, matcher.start(), matcher.end()).addToIndexes(); 
 		}
 	}
+	
 }

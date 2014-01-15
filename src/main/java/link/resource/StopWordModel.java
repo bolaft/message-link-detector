@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.uima.resource.DataResource;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.SharedResourceObject;
 
 /**
@@ -29,7 +28,12 @@ public final class StopWordModel implements StopWordModelInterface, SharedResour
 		return getStopWords().contains(key);
 	}
 	
-	public synchronized void load(DataResource aData) throws ResourceInitializationException {
+	public synchronized void load(DataResource aData) {
+		String errorMsg = "%s - set could not be loaded\n";
+		String successMsg = "%s - set loaded\n";
+		
+		System.out.printf("%s - loading set from %s...\n", getClass().getName(), aData.getUrl().getFile());
+		
 		if (stopWordSet == null) {		
 			stopWordSet = new HashSet<String>();
 			InputStream inStr = null;
@@ -37,24 +41,27 @@ public final class StopWordModel implements StopWordModelInterface, SharedResour
 			try {
 				// open input stream to data
 				inStr = aData.getInputStream();
-				// read each line
 				BufferedReader reader = new BufferedReader(new InputStreamReader(inStr));
+				
+				// read each line
 				String line;
+				
 				while ((line = reader.readLine()) != null) {
 					if (! line.startsWith("#"))
 					add(line.trim());
 				}
-			} catch (IOException e) {
-				throw new ResourceInitializationException(e);
+				
+				System.out.printf(successMsg, getClass().getName());
+			} catch (Exception e) {
+				System.out.printf(errorMsg, getClass().getName());
 			} finally {
 				if (inStr != null) {
 					try {
 						inStr.close();
-					} catch (IOException e) {
-					}
+					} catch (IOException e) { }
 				}
 			}
-
 		}
 	}
+	
 }

@@ -58,6 +58,11 @@
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+        	<groupId>geronimo-spec</groupId>
+			<artifactId>geronimo-spec-j2ee</artifactId>
+			<version>1.4-rc3</version>
+		</dependency>
     </dependencies>
     
     <build>

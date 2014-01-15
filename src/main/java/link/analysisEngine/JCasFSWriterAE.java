@@ -5,16 +5,14 @@ import java.io.IOException;
 
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.examples.SourceDocumentInformation;
-import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.jcas.JCas;
-
 import common.util.MiscUtil;
 
 /**
  * Annotator that export the jcas text content to the file system
  */
-public class JCasFSWriterAE extends JCasAnnotator_ImplBase {
+public class JCasFSWriterAE extends linkJCasAnnotator {
 
 	public static final String PARAM_DESTDIRNAME = "destDirName";
 	@ConfigurationParameter(name = PARAM_DESTDIRNAME, mandatory = false, defaultValue="/tmp")
@@ -40,5 +38,4 @@ public class JCasFSWriterAE extends JCasAnnotator_ImplBase {
 		
 		MiscUtil.writeToFS(aJCas.getDocumentText(), destDirName+"/"+filename+destFileExtension);
 	}
-
 }
