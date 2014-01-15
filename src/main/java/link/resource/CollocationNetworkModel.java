@@ -4,62 +4,77 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.uima.resource.DataResource;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.SharedResourceObject;
 
 import common.util.MiscUtil;
 
 public class CollocationNetworkModel implements CollocationNetworkModelInterface, SharedResourceObject {
-	private Map<String, Map<String, Double>> collocationNetwork = new HashMap<String, Map<String, Double>>();
+	protected Map<String, Map<String, Integer>> collocationMap = new HashMap<String, Map<String, Integer>>();
+	protected Boolean loaded = false;
 
-	public void addPair(String word, String colWord, boolean lookBack) {
-		if (collocationNetwork.containsKey(word)){
-			Map<String, Double> wordMap = collocationNetwork.get(word);
+	/**
+	 * Increments the collocation value of a pair of words 
+	 */
+	public void increment(String word, String colWord, boolean lookBack) {
+		if (collocationMap.containsKey(word)){
+			Map<String, Integer> wordMap = collocationMap.get(word);
 			
 			if (wordMap.containsKey(colWord)){
 				wordMap.put(colWord, wordMap.get(colWord) + 1);
 			} else {
-				wordMap.put(colWord, 1.0);
+				wordMap.put(colWord, 1);
 			}
 		} else {
-			Map<String, Double> initMap = new HashMap<String, Double>();
-			initMap.put(colWord, 1.0);
-			collocationNetwork.put(word, initMap);
+			Map<String, Integer> initMap = new HashMap<String, Integer>();
+			initMap.put(colWord, 1);
+			collocationMap.put(word, initMap);
 		}
 		
 		if (lookBack) {
-			addPair(colWord, word, false);
+			increment(colWord, word, false);
 		}
 	}
 	
+	/**
+	 * Displays the collocation network in the console
+	 */
 	public void display(){
-		for (Entry<String, Map<String, Double>> entry : collocationNetwork.entrySet()){
-		    for (Entry<String, Double> subEntry : entry.getValue().entrySet()){
+		for (Entry<String, Map<String, Integer>> entry : collocationMap.entrySet()){
+		    for (Entry<String, Integer> subEntry : entry.getValue().entrySet()){
 			    System.out.println(entry.getKey() + " " + subEntry.getKey() + ": " + subEntry.getValue());
 		    }
 		}
 	}
 	
-	public synchronized void save(String filename) {
-		String csv = "";
+	/**
+	 * If the collocation map was not loaded, saves it to file
+	 */
+	public synchronized void save(String filename, Integer min) {
+		if (!loaded) {
+			String csv = "";
 
-		for (Entry<String, Map<String, Double>> entry : collocationNetwork.entrySet()){
-		    for (Entry<String, Double> subEntry : entry.getValue().entrySet()){
-			    csv += entry.getKey() + "\t" + subEntry.getKey() + "\t" + subEntry.getValue() + "\n";
-		    }
+			for (Entry<String, Map<String, Integer>> entry : collocationMap.entrySet()){
+			    for (Entry<String, Integer> subEntry : entry.getValue().entrySet()){
+			    	if (subEntry.getValue() >= min) csv += entry.getKey() + "\t" + subEntry.getKey() + "\t" + subEntry.getValue() + "\n";
+			    }
+			}
+			
+			MiscUtil.writeToFS(csv, filename);
 		}
-		
-		MiscUtil.writeToFS(csv, filename);
 	}
 
-	public void load(DataResource aData) throws ResourceInitializationException {
+	/**
+	 * Attempts to load the collocation map from file
+	 */
+	public void load(DataResource aData) {
 		InputStream inStr = null;
+		String errorMsg = "CollocationNetworkModel - map could not be loaded from file ; will proceed with building from scratch.";
+		String successMsg = "CollocationNetworkModel - map successfuly loaded from file";
 		
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(aData.getInputStream()));
@@ -69,17 +84,22 @@ public class CollocationNetworkModel implements CollocationNetworkModelInterface
                 String[] columns = line.split("\t");
                 
                 if (columns.length == 3){
-                	if (!collocationNetwork.containsKey(columns[0])){
-                    	Map<String, Double> pair = new HashMap<String, Double>();
-                        collocationNetwork.put(columns[0], pair);
+                	loaded = true;
+                	
+                	if (!collocationMap.containsKey(columns[0])){
+                    	Map<String, Integer> pair = new HashMap<String, Integer>();
+                        collocationMap.put(columns[0], pair);
                 	}
                 	
-                	collocationNetwork.get(columns[0]).put(columns[1], Double.valueOf(columns[2]));
-                	
+                	collocationMap.get(columns[0]).put(columns[1], Integer.valueOf(columns[2]));
                 }
 			}
+			
+			System.out.println(successMsg);
 		} catch (IOException e) {
-			throw new ResourceInitializationException(e);
+			System.out.println(errorMsg);
+		} catch (NullPointerException e) {
+			System.out.println(errorMsg);
 		} finally {
 			if (inStr != null) {
 				try {
@@ -87,6 +107,13 @@ public class CollocationNetworkModel implements CollocationNetworkModelInterface
 				} catch (IOException e) {}
 			}
 		}
+	}
+
+	/**
+	 * Checks if the collocation map was loaded
+	 */
+	public boolean isLoaded() {
+		return loaded;
 	}
 	
 }

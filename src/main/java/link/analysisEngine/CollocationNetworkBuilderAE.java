@@ -14,7 +14,7 @@ import org.apache.uima.jcas.JCas;
 import common.types.Token;
 
 /**
- * Annotator that builds collocation 
+ * Annotator that builds the collocation network
  */
 public class CollocationNetworkBuilderAE extends JCasAnnotator_ImplBase {
 
@@ -32,27 +32,31 @@ public class CollocationNetworkBuilderAE extends JCasAnnotator_ImplBase {
 
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
-		ArrayList<Token> tokens = new ArrayList<Token>(JCasUtil.select(aJCas, Token.class));
-		
-		for (int i = 0; i < tokens.size(); i++){
-			String head = tokens.get(i).getCoveredText().toLowerCase();
+		if (!collocationNetwork.isLoaded()) {
+			ArrayList<Token> tokens = new ArrayList<Token>(JCasUtil.select(aJCas, Token.class));
 			
-			System.out.println("head: " + head);
-			
-			for (int j = 0; j < windowSize && i+j < tokens.size(); j++) {
-				String token = tokens.get(i+j).getCoveredText().toLowerCase();
+			for (int i = 0; i < tokens.size(); i++){
+				String head = tokens.get(i).getCoveredText().toLowerCase();
 				
-				System.out.println("	token: " + token);
+				System.out.println("head: " + head);
 				
-				collocationNetwork.addPair(head, token, true);
+				for (int j = 1; j < windowSize && i+j < tokens.size(); j++) {
+					String token = tokens.get(i+j).getCoveredText().toLowerCase();
+					
+					System.out.println("	token: " + token);
+					
+					collocationNetwork.increment(head, token, true);
+				}
 			}
 		}
 	}
 	
 	@Override
 	public void collectionProcessComplete() throws AnalysisEngineProcessException {
+		System.out.println("CollocationNetworkBuilderAE - display()");
 		collocationNetwork.display(); 
-		collocationNetwork.save(resourceDestFilename);
+		System.out.println("CollocationNetworkBuilderAE - save()");
+		collocationNetwork.save(resourceDestFilename, 1);
 	}
 	
 }

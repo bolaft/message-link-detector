@@ -34,20 +34,21 @@ public class CollocationNetworkBuilderWF {
 	
 		ExternalResourceDescription collocationNetworkResourceDesc = createExternalResourceDescription(
 			CollocationNetworkModel.class,
-			"file:data/collocation-network.csv"
+			"file:tmp/collocation-network.csv"
 		);
 		
 		// Binding external resource to each Annotator individually
-		AnalysisEngineDescription aed0 = createEngineDescription(
+		AnalysisEngineDescription wordSegmenterAED = createEngineDescription(
 			WordSegmenterAE.class, 
 			WordSegmenterAE.RES_KEY, 
 			stopWordsResourceDesc
 		);
 
-		AnalysisEngineDescription aed3 = createEngineDescription(
-			CollocationNetworkBuilderAE.class, CollocationNetworkBuilderAE.RES_KEY,
+		AnalysisEngineDescription collocationNetworkBuilderAED = createEngineDescription(
+			CollocationNetworkBuilderAE.class, 
+			CollocationNetworkBuilderAE.RES_KEY,
 			collocationNetworkResourceDesc, 
-			CollocationNetworkBuilderAE.PARAM_RESOURCE_DEST_FILE, "tmp/testCollocationNetwork.csv"
+			CollocationNetworkBuilderAE.PARAM_RESOURCE_DEST_FILE, "tmp/collocation-network.csv"
 		);
 		
 		// AnalysisEngineDescription aed4 = createEngineDescription(
@@ -57,7 +58,7 @@ public class CollocationNetworkBuilderWF {
 		// );
 		
 		// Check the external resource was injected
-		AnalysisEngineDescription aaed = createEngineDescription(aed0, aed3);
+		AnalysisEngineDescription aed = createEngineDescription(wordSegmenterAED, collocationNetworkBuilderAED);
 		
 		// Creation of the collection reader description 
 		// ZimReaderCR read 7864 articles of ubuntudoc_fr_01_2009.zim but only 4124 html with 4076 non null
@@ -69,7 +70,8 @@ public class CollocationNetworkBuilderWF {
 		);
 		
 		// Run the pipeline
-		SimplePipeline.runPipeline(crd, aaed);
+		SimplePipeline.runPipeline(crd, aed);
+		System.out.println("Complete.");
 	}
 	
 }
