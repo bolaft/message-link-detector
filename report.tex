@@ -70,7 +70,7 @@
 
 \section{Approche}
 
-L'objectif est d'identifier les liens entre emails au sein d'un thread. Pour ce faire, on cherche à décrire les messages pour les chaînes lexicales qu'ils contiennent, puis de les comparer entre eux pour déterminer s'ils partagent des chaînes.
+L'objectif est d'identifier les liens entre emails au sein d'un thread. Pour ce faire, on cherche à décrire les messages par les chaînes lexicales qu'ils contiennent, puis à les comparer entre eux pour déterminer s'ils partagent des chaînes.
 
 Les chaînes lexicales sont construites en se basant sur le principe que les mots qui les constituent doivent avoir une forte valeur collocationnelle entre eux, et qu'ils se situent dans la même portion du message.
 
@@ -86,13 +86,13 @@ La classe \texttt{link.workflow.ZimAnalyserWF} est utilisée pour extraire un r�
 
 La classe fait appel à deux moteurs d'analyse dans sa pipeline : d'abord le Word Segmenter, pour annoter les tokens, puis le Collocation Network Builder pour construire et exporter le réseau de collocations.
 
-Le workflow accepte un fichier de base par dessus lequel construire le réseau de collocations, mais par défaut ce dernier est vide. On pourrait utiliser ce paramètre pour enrichir le réseau de collocations en appliquant le workflow successivement sur différents fichiers Zim.
+Le workflow accepte un fichier de base par dessus lequel on pourra construire le réseau de collocations, mais par défaut ce dernier est vide. On pourrait utiliser ce paramètre pour enrichir le réseau de collocations en exécutant le workflow successivement sur différents fichiers Zim. Par défaut, le réseau de collocations est construit à partir de 0.
 
 \subsubsection{MBox Analyser}
 
 La classe \texttt{link.workflow.MBoxAnalyserWF} est utilisée pour construire les chaînes lexicales des messages d'un fichier MBox et les utiliser pour détecter les liens entre ces derniers.
 
-La classe fait tourner deux moteurs d'analyse dans sa pipeline : d'abord le Word Segmenter, pour annoter les tokens, puis le MBox Message Parser, pour parser chaque message et en extraire le contenu et les métadonnées, et enfin le Lexical Chainer qui se charge de construire les chaînes lexicales, de lier les emails et d'exporter le résultat obtenu.
+La classe fait tourner trois moteurs d'analyse dans sa pipeline : d'abord le Word Segmenter, pour annoter les tokens, puis le MBox Message Parser, pour parser chaque message et en extraire le contenu et les métadonnées, et enfin le Lexical Chainer qui se charge de construire les chaînes lexicales, de lier les emails et d'exporter le résultat obtenu.
 
 \subsection{Moteurs d'analyse}
 
@@ -112,7 +112,7 @@ Le Collocation Network Builder prend comme paramètres : la taille de la fenêtr
 
 \subsubsection{MBox Message Parser}
 
-La classe \texttt{link.analysisEngine.MBoxMessageParserAE} parse les messages et en extrait contenu et métadonnées. Les informations recueillis sont regroupées dans un objet Mail. Chaque objet Mail est lié à un JCas et sauvegardé statiquement en mémoire pour pouvoir être utilisé par d'autres moteurs d'analyse (notamment le Lexical Chainer).
+La classe \texttt{link.analysisEngine.MBoxMessageParserAE} parse les messages et en extrait contenu et métadonnées. Les informations recueillies sont regroupées dans un objet Mail. Chaque objet Mail est lié à un JCas et sauvegardé statiquement en mémoire pour pouvoir être utilisé par d'autres moteurs d'analyse (notamment le Lexical Chainer).
 
 Ce moteur d'analyse utilise la ressource Thread Index pour attribuer à chaque mail un identifiant de thread.
 
@@ -142,7 +142,7 @@ for (i in [0:size(tokens) - 1]):
 /for
 \end{lstlisting}
 
-Voici, en pseudo-code, l'algorithme utilisé pour sélectionné le mail auquel le mail examiné répond :
+Voici, en pseudo-code, l'algorithme utilisé pour sélectionner le mail auquel le mail examiné répond :
 
 \begin{lstlisting}
 max = 0.0;
@@ -190,7 +190,7 @@ Le dépôt git du code source est hébergé sur github. Les sources peuvent donc
 
 \texttt{git clone https://github.com/bolaft/message-link-detector.git}\newline
 
-Le dossier créé contient un fichier \texttt{pom.xml} et peut donc être importé comme projet maven dans Eclipse (requiert m2e).
+Le dossier créé contient un fichier \texttt{pom.xml} et peut donc être importé comme un projet Maven dans Eclipse (requiert m2e).
 
 \subsection{Exécution}
 
@@ -285,10 +285,14 @@ Les avantages principaux du framework UIMA ont été, pour cette tâche en tous 
 \label{overflow}
 \end{figure}
 
-La pièce jointe \texttt{uima-as\_activity\_diagram.png} représente le diagramme d'activité d'une hypothétique implémentation du programme avec UIMA AS.
+Le fichier \texttt{uima-as\_activity\_diagram.png} représente le diagramme d'activité d'une hypothétique implémentation du programme avec UIMA AS. Il peut être consulté ou téléchargé dans sa version large à l'adresse suivante :\newline
+
+\url{https://raw.github.com/bolaft/message-link-detector/master/uima-as_activity_diagram.png}
 
 \subsection{Sources}
 
-Les sources du programme peuvent être récupérées à l'adresse suivante : \url{https://github.com/bolaft/message-link-detector}
+Les sources du programme peuvent être récupérées à l'adresse suivante :\newline
+
+\url{https://github.com/bolaft/message-link-detector}
 
 \end{document}
