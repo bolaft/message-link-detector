@@ -95,20 +95,30 @@ public class MBoxMessageConsumerAE extends linkJCasAnnotator {
 			}
 		}
 		
+		Double max = 0.0;
+		Mail replyTo = null;
+		
 		for (Mail m : Mail.mails.get(mail.getThread())) {
-			if (m.getMessage().getDate().before(message.getDate())) mail.compare(m);
+			if (m.getMessage().getDate().before(message.getDate())) {
+				Double sim = mail.compare(m);
+				
+				if (sim > max) {
+					max = sim;
+					replyTo = m;
+				}
+			}
 		}
 		
-		if (mail.getReplyTo() != null) {
+		if (replyTo != null) {
 			sb
-			.append(mail.getReplyTo().getMessage().getMessageId())
+			.append(replyTo.getMessage().getMessageId())
 			.append(':')
 			.append(message.getMessageId())
 			.append('\n');
 		}
 		
-		// System.out.printf("%s\t%s\n", new Date(), counter);
-		// counter++;
+		System.out.printf("%s\t%s\n", new Date(), counter);
+		counter++;
 	}
 	
 	@Override

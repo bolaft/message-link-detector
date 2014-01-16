@@ -24,6 +24,16 @@ public class MiscUtil  {
 		);
 	}
 	
+	public static void echo(String string) {
+		System.out.println(string);
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * TreeMap sorted by value
 	 * http://stackoverflow.com/questions/2864840/treemap-sort-by-value
