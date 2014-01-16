@@ -29,13 +29,9 @@ import factory.parser.MBoxParser;
  */
 public class MBoxMessageConsumerAE extends linkJCasAnnotator {
 
-	public final static String COL_RES_KEY = "colKey";
-	@ExternalResource(key = COL_RES_KEY)
+	public final static String RES_KEY = "aKey";
+	@ExternalResource(key = RES_KEY)
 	private CollocationNetworkModelInterface collocationNetwork;
-
-	public final static String THR_RES_KEY = "thrKey";
-	@ExternalResource(key = THR_RES_KEY)
-	private ThreadIndexModelInteface threadIndex;
 
 	public static final String PARAM_OUTPUT_FILE = "output_file";
 	@ConfigurationParameter(name = PARAM_OUTPUT_FILE, mandatory = false, defaultValue = "tmp/reply-list.csv")
@@ -50,33 +46,14 @@ public class MBoxMessageConsumerAE extends linkJCasAnnotator {
 
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
-		MBoxParser parser = new MBoxParser();
-		Message message = null;
-		
-		try {
-			message = parser.parse(aJCas.getDocumentText());
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-		
-		String mid = message.getMessageId();
-		
-		if (mid instanceof String == false || mid.length() <= 2) return;
-			
-		message.setMessageId(mid.substring(1, mid.length() - 1));
-		
-		Integer thread = threadIndex.getIndex().get(message.getMessageId());
-		
-		if (thread == null) return;
-		
-		Mail mail = new Mail(message, thread);
+		Mail mail = Mail.jCasMails.get(aJCas);
 
 		ArrayList<Token> tokens = new ArrayList<Token>(JCasUtil.select(aJCas, Token.class));
 		
 		HashSet<String> lc = new HashSet<String>();
 		
 		for (int i = 0; i < (tokens.size() - 1) ; i++) {
-			if (tokens.get(i).getBegin() < aJCas.getDocumentText().indexOf(message.getBodyText())) continue;
+			if (tokens.get(i).getBegin() < aJCas.getDocumentText().indexOf(mail.getMessage().getBodyText())) continue;
 					
 			String word = tokens.get(i).getCoveredText().toLowerCase();
 			String next = tokens.get(i + 1).getCoveredText().toLowerCase();
@@ -99,7 +76,7 @@ public class MBoxMessageConsumerAE extends linkJCasAnnotator {
 		Mail replyTo = null;
 		
 		for (Mail m : Mail.mails.get(mail.getThread())) {
-			if (m.getMessage().getDate().before(message.getDate())) {
+			if (m.getMessage().getDate().before(mail.getMessage().getDate())) {
 				Double sim = mail.compare(m);
 				
 				if (sim > max) {
@@ -113,7 +90,7 @@ public class MBoxMessageConsumerAE extends linkJCasAnnotator {
 			sb
 			.append(replyTo.getMessage().getMessageId())
 			.append(':')
-			.append(message.getMessageId())
+			.append(mail.getMessage().getMessageId())
 			.append('\n');
 		}
 		

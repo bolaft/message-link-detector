@@ -5,10 +5,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import org.apache.uima.jcas.JCas;
+
 import com.auxilii.msgparser.Message;
 
 public class Mail {
 	public static HashMap<Integer, HashSet<Mail>> mails = new HashMap<Integer, HashSet<Mail>>();
+	public static HashMap<JCas, Mail> jCasMails = new HashMap<JCas, Mail>();
 	
 	protected ArrayList<LexicalChain> description = new ArrayList<LexicalChain>();
 	protected Integer thread;

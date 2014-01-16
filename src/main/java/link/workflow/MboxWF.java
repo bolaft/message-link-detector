@@ -11,6 +11,7 @@ import java.io.File;
 
 import link.analysisEngine.MBoxMessageConsumerAE;
 import link.analysisEngine.MBoxMessageParserAE;
+import link.analysisEngine.WordSegmenterAE;
 import link.collectionReader.MboxReaderCR;
 import link.resource.CollocationNetworkModel;
 import link.resource.StopWordModel;
@@ -46,13 +47,18 @@ public class MboxWF {
 		
 		AnalysisEngineDescription mBoxMessageParserAED = createEngineDescription(
 			MBoxMessageParserAE.class,
-			MBoxMessageParserAE.RES_KEY, stopWordsResourceDesc
+			MBoxMessageConsumerAE.RES_KEY, threadIndexResourceDesc
+		);
+		
+		// Binding external resource to each Annotator individually
+		AnalysisEngineDescription wordSegmenterAED = createEngineDescription(
+			WordSegmenterAE.class, 
+			WordSegmenterAE.RES_KEY, stopWordsResourceDesc
 		);
 		
 		AnalysisEngineDescription mBoxMessageConsumerAED = createEngineDescription(
 			MBoxMessageConsumerAE.class,
-			MBoxMessageConsumerAE.COL_RES_KEY, collocationNetworkResourceDesc,
-			MBoxMessageConsumerAE.THR_RES_KEY, threadIndexResourceDesc,
+			MBoxMessageConsumerAE.RES_KEY, collocationNetworkResourceDesc,
 			MBoxMessageConsumerAE.PARAM_OUTPUT_FILE, "tmp/results.digest"
 		);
 
@@ -64,7 +70,7 @@ public class MboxWF {
 		);
 		
 		// Check the external resource was injected
-		AnalysisEngineDescription aed = createEngineDescription(mBoxMessageParserAED, mBoxMessageConsumerAED);
+		AnalysisEngineDescription aed = createEngineDescription(wordSegmenterAED, mBoxMessageParserAED, mBoxMessageConsumerAED);
 
 		// Run the pipeline
 		SimplePipeline.runPipeline(crd, aed);
