@@ -13,7 +13,7 @@ import org.apache.uima.resource.SharedResourceObject;
 /**
  * Implementation of the model of stop word list
  */
-public final class StopWordModel implements StopWordModelInterface, SharedResourceObject {
+public final class StopwordListModel implements StopwordListModelInterface, SharedResourceObject {
 	private Set<String> stopWordSet;
 
 	private synchronized Set<String> getStopWords () {

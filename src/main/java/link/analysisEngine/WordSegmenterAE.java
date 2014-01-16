@@ -6,9 +6,7 @@ package link.analysisEngine;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import link.resource.StopWordModelInterface;
-import link.resource.ThreadIndexModelInteface;
-
+import link.resource.StopwordListModelInterface;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.jcas.JCas;
@@ -19,10 +17,10 @@ import common.types.Token;
  * Annotator that segments the text into words and filter the one present 
  * in a stop word set
  */
-public class WordSegmenterAE extends linkJCasAnnotator {	
+public class WordSegmenterAE extends AbstractAE {	
 	public final static String RES_KEY = "aKey";
 	@ExternalResource(key = RES_KEY)
-	private StopWordModelInterface stopWords;
+	private StopwordListModelInterface stopWords;
 	
 	final static String WORD_SEPARATOR_PATTERN = "[^\\s\\p{Punct}\\d]+"; //"[^\\s\\.:,'\\(\\)!]+";
 	

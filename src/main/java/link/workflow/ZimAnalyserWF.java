@@ -10,7 +10,7 @@ import link.analysisEngine.CollocationNetworkBuilderAE;
 import link.analysisEngine.WordSegmenterAE;
 import link.collectionReader.ZimReaderCR;
 import link.resource.CollocationNetworkModel;
-import link.resource.StopWordModel;
+import link.resource.StopwordListModel;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
@@ -21,14 +21,14 @@ import org.apache.uima.resource.ExternalResourceDescription;
  * Illustrate how to configure 
  * and run annotators with the shared model object.
  */
-public class CollocationNetworkBuilderWF {
+public class ZimAnalyserWF {
 
 	public static void main(String[] args) throws Exception {
-		System.out.printf("%s - started...\n", CollocationNetworkBuilderWF.class.getName());
+		System.out.printf("%s - started...\n", ZimAnalyserWF.class.getName());
 		
 		// Creation of the external resource description
 		ExternalResourceDescription stopWordsResourceDesc = createExternalResourceDescription(
-			StopWordModel.class, 
+			StopwordListModel.class, 
 			"file:data/stopwords-fr.txt"
 		);
 	
@@ -63,7 +63,7 @@ public class CollocationNetworkBuilderWF {
 		
 		// Run the pipeline
 		SimplePipeline.runPipeline(crd, aed);
-		System.out.printf("%s - done\n", CollocationNetworkBuilderWF.class.getName());
+		System.out.printf("%s - done\n", ZimAnalyserWF.class.getName());
 	}
 	
 }

@@ -22,7 +22,7 @@ public class CollocationNetworkModel implements CollocationNetworkModelInterface
 	 * Increments the collocation value of a pair of words 
 	 */
 	public void increment(String head, String word, boolean lookBack) {
-		System.out.printf("+1 \"%s\", \"%s\"\n", head, word);
+		// System.out.printf("+1 \"%s\", \"%s\"\n", head, word);
 		
 		if (collocationMap.containsKey(head)){
 			Map<String, Integer> wordMap = collocationMap.get(head);

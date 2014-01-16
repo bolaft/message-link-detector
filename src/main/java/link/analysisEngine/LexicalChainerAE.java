@@ -4,30 +4,24 @@
 package link.analysisEngine;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 
 import link.dataModel.LexicalChain;
 import link.dataModel.Mail;
 import link.resource.CollocationNetworkModelInterface;
-import link.resource.ThreadIndexModelInteface;
-
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 
-import com.auxilii.msgparser.Message;
-
 import common.types.Token;
 import common.util.MiscUtil;
-import factory.parser.MBoxParser;
 
 /**
  * Annotator that parse the content of a JCas assuming it is an MBox message
  */
-public class MBoxMessageConsumerAE extends linkJCasAnnotator {
+public class LexicalChainerAE extends AbstractAE {
 
 	public final static String RES_KEY = "aKey";
 	@ExternalResource(key = RES_KEY)

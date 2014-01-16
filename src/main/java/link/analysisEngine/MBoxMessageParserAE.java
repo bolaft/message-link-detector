@@ -17,7 +17,7 @@ import factory.parser.MBoxParser;
 /**
  * Annotator that parse the content of a JCas assuming it is an MBox message
  */
-public class MBoxMessageParserAE extends linkJCasAnnotator {
+public class MBoxMessageParserAE extends AbstractAE {
 	
 	public final static String RES_KEY = "aKey";
 	@ExternalResource(key = RES_KEY)

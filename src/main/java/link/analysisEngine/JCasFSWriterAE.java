@@ -12,7 +12,7 @@ import common.util.MiscUtil;
 /**
  * Annotator that export the jcas text content to the file system
  */
-public class JCasFSWriterAE extends linkJCasAnnotator {
+public class JCasFSWriterAE extends AbstractAE {
 
 	public static final String PARAM_DESTDIRNAME = "destDirName";
 	@ConfigurationParameter(name = PARAM_DESTDIRNAME, mandatory = false, defaultValue="/tmp")

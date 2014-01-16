@@ -15,7 +15,7 @@ import common.types.Token;
 /**
  * Annotator that builds the collocation network
  */
-public class CollocationNetworkBuilderAE extends linkJCasAnnotator {
+public class CollocationNetworkBuilderAE extends AbstractAE {
 
 	public final static String RES_KEY = "aKey";
 	@ExternalResource(key = RES_KEY)
@@ -26,7 +26,7 @@ public class CollocationNetworkBuilderAE extends linkJCasAnnotator {
 	private String resourceDestFilename;
 	
 	public static final String PARAM_WINDOW_SIZE = "windowSize";
-	@ConfigurationParameter(name = PARAM_WINDOW_SIZE, mandatory = false, defaultValue="3")
+	@ConfigurationParameter(name = PARAM_WINDOW_SIZE, mandatory = false, defaultValue="8")
 	private Integer windowSize;
 
 	public static final String PARAM_MIN_COLLOCATION = "minCollocation";
