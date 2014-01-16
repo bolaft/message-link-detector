@@ -37,19 +37,20 @@ public class LexicalChain {
 	public Double compare(LexicalChain otherLexicalChain) {
 		Set<String> lexicalChainIntersection = new HashSet<String>(getLexicalChain());
 		lexicalChainIntersection.retainAll(otherLexicalChain.getLexicalChain());
+		
 		if (lexicalChainIntersection.size() == 0) return 0.0;
+		
 		return (double) ((double) lexicalChainIntersection.size() / (double) ((getLexicalChain().size() + otherLexicalChain.getLexicalChain().size())/2));
 	}
 	
 	public Boolean isSimilar(LexicalChain otherLexicalChain, Double threshold) {
-		
 		if (this.compare(otherLexicalChain) > threshold) return true;
+		
 		return false;
 	}
 	
 	public Boolean isSimilar(LexicalChain otherLexicalChain) {
-		
-		return isSimilar(otherLexicalChain,THRESHOLD);
+		return isSimilar(otherLexicalChain, THRESHOLD);
 	}
 	
 	public String toString ( ){

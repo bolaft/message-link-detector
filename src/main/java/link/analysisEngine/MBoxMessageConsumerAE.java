@@ -4,11 +4,13 @@
 package link.analysisEngine;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
+
 import link.dataModel.LexicalChain;
 import link.dataModel.Mail;
 import link.resource.CollocationNetworkModelInterface;
+import link.resource.ThreadIndexModelInteface;
 
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
@@ -16,7 +18,10 @@ import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 
+import com.auxilii.msgparser.Message;
+
 import common.types.Token;
+import common.util.MiscUtil;
 import factory.parser.MBoxParser;
 
 /**
@@ -24,39 +29,65 @@ import factory.parser.MBoxParser;
  */
 public class MBoxMessageConsumerAE extends linkJCasAnnotator {
 
-	public final static String RES_KEY = "aKey";
-	@ExternalResource(key = RES_KEY)
+	public final static String COL_RES_KEY = "colKey";
+	@ExternalResource(key = COL_RES_KEY)
 	private CollocationNetworkModelInterface collocationNetwork;
+
+	public final static String THR_RES_KEY = "thrKey";
+	@ExternalResource(key = THR_RES_KEY)
+	private ThreadIndexModelInteface threadIndex;
+
+	public static final String PARAM_OUTPUT_FILE = "output_file";
+	@ConfigurationParameter(name = PARAM_OUTPUT_FILE, mandatory = false, defaultValue = "tmp/reply-list.csv")
+	private String output_file;
 
 	public static final String PARAM_THRESHOLD = "threshold";
 	@ConfigurationParameter(name = PARAM_THRESHOLD, mandatory = false, defaultValue = "3")
 	private Integer threshold;
+	
+	public static StringBuilder sb = new StringBuilder();
+	public static Integer counter = 1;
 
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
 		MBoxParser parser = new MBoxParser();
-		Mail mail = null;
+		Message message = null;
 		
 		try {
-			mail = new Mail(parser.parse(aJCas.getDocumentText()));
-		} catch (Exception e) {
-			e.printStackTrace();
+			message = parser.parse(aJCas.getDocumentText());
+		} catch (Exception e1) {
+			e1.printStackTrace();
 		}
+		
+		String mid = message.getMessageId();
+		
+		if (mid instanceof String == false || mid.length() <= 2) return;
+			
+		message.setMessageId(mid.substring(1, mid.length() - 1));
+		
+		Integer thread = threadIndex.getIndex().get(message.getMessageId());
+		
+		if (thread == null) return;
+		
+		Mail mail = new Mail(message, thread);
 
 		ArrayList<Token> tokens = new ArrayList<Token>(JCasUtil.select(aJCas, Token.class));
 		
 		HashSet<String> lc = new HashSet<String>();
 		
 		for (int i = 0; i < (tokens.size() - 1) ; i++) {
+			if (tokens.get(i).getBegin() < aJCas.getDocumentText().indexOf(message.getBodyText())) continue;
+					
 			String word = tokens.get(i).getCoveredText().toLowerCase();
+			String next = tokens.get(i + 1).getCoveredText().toLowerCase();
 			
-			if (collocationNetwork.check(word, tokens.get(i + 1).getCoveredText().toLowerCase(), threshold)) {
+			if (collocationNetwork.check(word, next, threshold)) {
 				if (lc.isEmpty()) lc.add(word);
 				
-				lc.add(tokens.get(i + 1).getCoveredText().toLowerCase());
+				lc.add(next);
 			} else {
-				if (!lc.isEmpty()) {
-					System.out.println(lc.toString());
+				if (lc.size() > 1) {
+					// System.out.println(lc.toString());
 					mail.getDescription().add(new LexicalChain(lc));
 				}
 				
@@ -64,34 +95,28 @@ public class MBoxMessageConsumerAE extends linkJCasAnnotator {
 			}
 		}
 		
-		System.out.println("### EOF ###");
+		for (Mail m : Mail.mails.get(mail.getThread())) {
+			if (m.getMessage().getDate().before(message.getDate())) mail.compare(m);
+		}
 		
-//		ArrayList<String> words = new ArrayList<String>();
-//		
-//		for (Token token : tokens) {
-//			String word = token.getCoveredText().toLowerCase();
-//			
-//			if (!words.contains(word) && word.length() >= minSize) {
-//				words.add(word);
-//			} else {
-//				continue;
-//			}
-//			
-//			boolean added = false;
-//
-//			for (LexicalChain lexicalChain : mail.getDescription()) {
-//				if (collocationNetwork.check(word, lexicalChain.getLexicalChain(), threshold)) {
-//					lexicalChain.addItem(word);
-//					added = true;
-//				}
-//			}
-//			
-//			if (!added){
-//				HashSet<String> hs = new HashSet<String>();
-//				hs.add(word);
-//				mail.getDescription().add(new LexicalChain(hs));
-//			}
-//		}
+		if (mail.getReplyTo() != null) {
+			sb
+			.append(mail.getReplyTo().getMessage().getMessageId())
+			.append(':')
+			.append(message.getMessageId())
+			.append('\n');
+		}
+		
+		// System.out.printf("%s\t%s\n", new Date(), counter);
+		// counter++;
 	}
 	
+	@Override
+	public void collectionProcessComplete() throws AnalysisEngineProcessException {
+		System.out.printf("%s - writing results to %s...\n", getClass().getName(), output_file);
+		
+		MiscUtil.writeToFS(sb.toString(), output_file);
+		
+		super.collectionProcessComplete();
+	}
 }

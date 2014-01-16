@@ -1,4 +1,4 @@
-#!/usr/bin/perl -CDS
+#!/usr/bin/perl
 #
 # Comparison of set in terms of Precision, Recall and F mesure 
 # By Nicolas HERNANDEZ 

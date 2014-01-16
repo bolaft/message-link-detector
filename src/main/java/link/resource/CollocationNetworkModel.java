@@ -15,14 +15,14 @@ import org.apache.uima.resource.SharedResourceObject;
 import common.util.MiscUtil;
 
 public class CollocationNetworkModel implements CollocationNetworkModelInterface, SharedResourceObject {
+	
 	protected Map<String, Map<String, Integer>> collocationMap = new HashMap<String, Map<String, Integer>>();
-	protected Boolean loaded = false;
 
 	/**
 	 * Increments the collocation value of a pair of words 
 	 */
 	public void increment(String head, String word, boolean lookBack) {
-		// System.out.printf("+1 \"%s\", \"%s\"\n", word, colWord);
+		System.out.printf("+1 \"%s\", \"%s\"\n", head, word);
 		
 		if (collocationMap.containsKey(head)){
 			Map<String, Integer> wordMap = collocationMap.get(head);
@@ -38,9 +38,7 @@ public class CollocationNetworkModel implements CollocationNetworkModelInterface
 			collocationMap.put(head, initMap);
 		}
 		
-		if (lookBack) {
-			increment(word, head, false);
-		}
+		if (lookBack) increment(word, head, false);
 	}
 	
 	/**
@@ -65,7 +63,9 @@ public class CollocationNetworkModel implements CollocationNetworkModelInterface
 		for (String head : collocationMap.keySet()) {
 			for (String word : collocationMap.get(head).keySet()) {
 				int val = collocationMap.get(head).get(word);
-				if (val >= minCol && head.length() >= minSize) {
+				if (val >= minCol 
+						&& head.length() >= minSize
+						&& word.length() >= minSize) {
 					sb.append(head).append('\t').append(word).append('\t').append(collocationMap.get(head).get(word)).append('\n');
 				}
 			}
@@ -95,8 +95,6 @@ public class CollocationNetworkModel implements CollocationNetworkModelInterface
                 String[] columns = line.split("\t");
                 
                 if (columns.length == 3){
-                	loaded = true;
-                	
                 	if (!collocationMap.containsKey(columns[0])){
                     	Map<String, Integer> pair = new HashMap<String, Integer>();
                         collocationMap.put(columns[0], pair);

@@ -14,6 +14,7 @@ import link.analysisEngine.MBoxMessageParserAE;
 import link.collectionReader.MboxReaderCR;
 import link.resource.CollocationNetworkModel;
 import link.resource.StopWordModel;
+import link.resource.ThreadIndexModel;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
@@ -38,6 +39,11 @@ public class MboxWF {
 			new File("tmp/collocation-network.csv")
 		);
 		
+		ExternalResourceDescription threadIndexResourceDesc = createExternalResourceDescription(
+			ThreadIndexModel.class,
+			new File("data/thread-messageId.digest")
+		);
+		
 		AnalysisEngineDescription mBoxMessageParserAED = createEngineDescription(
 			MBoxMessageParserAE.class,
 			MBoxMessageParserAE.RES_KEY, stopWordsResourceDesc
@@ -45,7 +51,9 @@ public class MboxWF {
 		
 		AnalysisEngineDescription mBoxMessageConsumerAED = createEngineDescription(
 			MBoxMessageConsumerAE.class,
-			MBoxMessageConsumerAE.RES_KEY, collocationNetworkResourceDesc
+			MBoxMessageConsumerAE.COL_RES_KEY, collocationNetworkResourceDesc,
+			MBoxMessageConsumerAE.THR_RES_KEY, threadIndexResourceDesc,
+			MBoxMessageConsumerAE.PARAM_OUTPUT_FILE, "tmp/results.digest"
 		);
 
 		CollectionReaderDescription crd = createReaderDescription(

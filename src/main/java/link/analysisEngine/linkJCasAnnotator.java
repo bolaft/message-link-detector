@@ -14,7 +14,7 @@ public abstract class linkJCasAnnotator extends JCasAnnotator_ImplBase {
 
 	@Override
 	public void initialize(final UimaContext context) throws ResourceInitializationException {
-		System.out.printf("%s - started...\n", getClass().getName());
+		System.out.printf("%s - started (this can take a few minutes)...\n", getClass().getName());
 		
 		super.initialize(context);
 	}

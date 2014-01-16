@@ -16,7 +16,6 @@ import com.auxilii.msgparser.Message;
 import com.auxilii.msgparser.RecipientEntry;
 
 import common.types.Token;
-import factory.parser.MBoxParser;
 
 /**
  * Annotator that parse the content of a JCas assuming it is an MBox message
@@ -31,24 +30,16 @@ public class MBoxMessageParserAE extends linkJCasAnnotator {
 
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
-		MBoxParser mboxParser = new MBoxParser();
-		Message message = null;
-		
-		try {
-			message  = mboxParser.parse(aJCas.getDocumentText());
-			
 			Pattern wordSeparatorPattern = Pattern.compile(WORD_SEPARATOR_PATTERN);
 			Matcher matcher = wordSeparatorPattern.matcher(aJCas.getDocumentText());
 			
 			while (matcher.find()) {
 				String group = matcher.group().toLowerCase();
-				if (!stopWords.contains(group)	&& matcher.start() > aJCas.getDocumentText().indexOf(message.getBodyText())) {
+				
+				if (!stopWords.contains(group)) {
 					new Token(aJCas, matcher.start(), matcher.end()).addToIndexes(); 
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	private static String messageSummary(Message message) {
