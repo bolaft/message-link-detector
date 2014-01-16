@@ -117,8 +117,8 @@ public class MBoxMessageConsumerAE extends linkJCasAnnotator {
 			.append('\n');
 		}
 		
-		System.out.printf("%s\t%s\n", new Date(), counter);
-		counter++;
+		// System.out.printf("%s\t%s\n", new Date(), counter);
+		// counter++;
 	}
 	
 	@Override
