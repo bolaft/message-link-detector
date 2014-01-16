@@ -35,11 +35,11 @@ public class Mail {
 	public Double compare(Mail other) {		
 		Double sum = 0.0;
 		
-		for (LexicalChain thisLC : other.getDescription()) {
+		for (LexicalChain otherLC : other.getDescription()) {
 			Double max = 0.0;
 			
-			for (LexicalChain otherLC : description) {
-				Double sim = thisLC.compare(otherLC);
+			for (LexicalChain thisLC : description) {
+				Double sim = otherLC.compare(thisLC);
 				
 				if (sim > max) max = sim;
 			}

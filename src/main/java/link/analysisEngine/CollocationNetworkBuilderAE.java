@@ -26,7 +26,7 @@ public class CollocationNetworkBuilderAE extends AbstractAE {
 	private String resourceDestFilename;
 	
 	public static final String PARAM_WINDOW_SIZE = "windowSize";
-	@ConfigurationParameter(name = PARAM_WINDOW_SIZE, mandatory = false, defaultValue="8")
+	@ConfigurationParameter(name = PARAM_WINDOW_SIZE, mandatory = false, defaultValue="3")
 	private Integer windowSize;
 
 	public static final String PARAM_MIN_COLLOCATION = "minCollocation";

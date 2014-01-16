@@ -13,10 +13,30 @@
 \usepackage{float}
 \usepackage{placeins}
 \usepackage{hyperref}
+\usepackage{listings}
 
 \hypersetup{
     colorlinks=false,
     pdfborder={0 0 0},
+}
+
+\lstset{ %
+	language=Java,
+	basicstyle=\footnotesize,
+	numbers=left,
+	numberstyle=\footnotesize,
+	stepnumber=1,
+	numbersep=5pt,
+	backgroundcolor=\color{white},
+	showspaces=false,
+	showstringspaces=false,
+	showtabs=false,
+	frame=single,
+	tabsize=2,
+	captionpos=b,
+	breaklines=true,
+	breakatwhitespace=false,
+	escapeinside={\%*}{*)}
 }
 
 \DeclareGraphicsExtensions{.png, .jpeg, .jpg, .svg}
@@ -46,100 +66,190 @@
 
 \newpage
 
-\tableofcontents
-
-\newpage
-
 \section{Approche}
 
 \section{Conception}
 
-	\subsection{Worflows}
+\subsection{Worflows}
 
-	\subsubsection{MBox Analyser}
+\subsubsection{Zim Analyser}
 
-	\subsubsection{Zim Analyser}
+La classe \texttt{link.workflow.ZimAnalyserWF} est utilisée pour extraire un réseau de collocations d'un fichier Zim, et l'exporter au format csv. Par défaut, le fichier est celui de la documentation Ubuntu francophone de 2009.
 
-	\subsection{Moteurs d'analyse}
+La classe fait appel à deux moteurs d'analyse dans sa pipeline : d'abord le Word Segmenter, pour annoter les tokens, puis le Collocation Network Builder pour construire et exporter le réseau de collocations.
 
-	\subsubsection{Word Segmenter}
+Le workflow accepte un fichier de base par dessus lequel construire le réseau de collocations, mais par défaut ce dernier est vide. On pourrait utiliser ce paramètre pour enrichir le réseau de collocations en appliquant le workflow successivement sur différents fichiers Zim.
 
-	\subsubsection{Collocation Network Builder}
+\subsubsection{MBox Analyser}
 
-	\subsubsection{Lexical Chainer}
+La classe \texttt{link.workflow.MBoxAnalyserWF} est utilisée pour construire les chaînes lexicales des messages d'un fichier MBox et les utiliser pour détecter les liens entre ces derniers.
 
-	\subsubsection{MBox Message Parser}
+La classe fait tourner deux moteurs d'analyse dans sa pipeline : d'abord le Word Segmenter, pour annoter les tokens, puis le MBox Message Parser, pour parser chaque message et en extraire le contenu et les métadonnées, et enfin le Lexical Chainer qui se charge de construire les chaînes lexicales, de lier les emails et d'exporter le résultat obtenu.
 
-\subsection{Ressources}
+\subsection{Moteurs d'analyse}
 
-	\subsubsection{Collocation Network}
+\subsubsection{Word Segmenter}
+	
+La classe \texttt{link.analysisEngine.WordSegmenterAE} annote les tokens qu'il trouve dans le JCas en utilisant une expression régulière.
 
-	\subsubsection{Stopword List}
+Il fait appel à une ressource externe, la Stopword List, pour filtrer les mots outils (qui ne seront pas annotés).
 
-	\subsubsection{Thread Index}
+Ce moteur d'analyse ne prend aucun paramètre.
+
+\subsubsection{Collocation Network Builder}
+
+La classe \texttt{link.analysisEngine.CollocationNetworkBuilderAE} utilise une fenêtre glissante pour mettre à jour la ressource Collocation Network avec les tokens rencontrés dans le fichier Zim. A la fin de la collection, la ressource est sauvegardée sur le système de fichiers.
+
+Le Collocation Network Builder prend comme paramètres : la taille de la fenêtre (par défaut : 3), la taille minimale des tokens (par défaut : 2), la valeur de collocation minimale pour être sauvegardée (par défaut : 1) et le chemin du fichier à enregistrer (par défaut : tmp/collocation-network.csv).
+
+\subsubsection{MBox Message Parser}
+
+La classe \texttt{link.analysisEngine.MBoxMessageParserAE} parse les messages et en extrait contenu et métadonnées. Les informations recueillis sont regroupées dans un objet Mail. Chaque objet Mail est lié à un JCas et sauvegardé statiquement en mémoire pour pouvoir être utilisé par d'autres moteurs d'analyse (notamment le Lexical Chainer).
+
+Ce moteur d'analyse utilise la ressource Thread Index pour attribuer à chaque mail un identifiant de thread.
+
+Il ne prend pas de paramètre.
+
+\subsubsection{Lexical Chainer}
+
+La classe \texttt{link.analysisEngine.LexicalChainerAE} construit les chaînes lexicales, les utilise pour lier les emails et exporte le résultat obtenu sur le système de fichiers.
+
+Voici, en pseudo-code, l'algorithme utilisé pour construire les chaines lexicales :
+	
+\begin{lstlisting}
+lc = <>
+description = []
+
+for (i in [0:size(tokens) - 1]):
+	word = tokens[i]
+	next = tokens[i+1]
+	
+	if (collocation(word, next) > PARAM_THRESHOLD):
+		if (lc is empty) add word to lc
+		lc.add(next)
+	else:
+		if (sizeof(lc) > 1) add lc to description
+		lc = <>;
+	/if
+/for
+\end{lstlisting}
+
+Voici, en pseudo-code, l'algorithme utilisé pour sélectionné le mail auquel le mail examiné répond (notez que si on vérifie que l'email examiné est bien plus ancien, c'est superflu avec le fichier MBox utilisé par défaut puisque les JCas y arrivent dans l'ordre chronologique) :
+
+\begin{lstlisting}
+max = 0.0;
+replyTo = null;
+
+for (otherMail in thread):
+	if (otherMail is older than mail):
+		sim = compare(mail, otherMail)
+		
+		if (sim > max):
+			max = sim
+			replyTo = otherMail
+		/if
+	/if
+/for
+\end{lstlisting}
+
+Et voici en pseudo-code l'algorithme utilisé pour la fonction compare(mail, otherMail) (sachant que la méthode pour comparer deux chaines lexicales qui y est utilisée était déjà implémentée de base et ne sera pas détaillé ici) :
+
+\begin{lstlisting}
+sum = 0.0;
+
+for (lc1 : mailDescription1):
+	max = 0.0;
+	
+	for (lc2 : mailDescription2):
+		sim = compare(lc1, lc2);
+		
+		if (sim > max):
+			max = sim;
+		/if
+	/for
+	
+	sum += max;
+/for
+
+return sum / (sizeof(mailDescription1) * sizeof(mailDescription2));
+\end{lstlisting}
 
 \section{Utilisation}
 
-	\subsection{Installation}
+\subsection{Installation}
 
-	\subsection{Exécution}
+Le dépôt git du code source est hébergé sur github. Les sources peuvent donc soit être téléchargées sur la page \url{https://github.com/bolaft/message-link-detector}, soit être directement clonées avec la commande suivante :\newline
 
-	\subsection{Évaluation des résultats}
+\texttt{git clone https://github.com/bolaft/message-link-detector.git}\newline
+
+Le dossier créé contient un fichier \texttt{pom.xml} et peut donc être importé comme projet maven dans Eclipse (requiert m2e).
+
+\subsection{Exécution}
+
+Il faut d'abord construire et exporter le réseau de collocations. Pour ce faire, depuis Eclipse, on peut lancer la classe \texttt{link.workflow.ZimAnalyserWF}. Lorsque le processus est terminé, on devrait obtenir un fichier \texttt{collocation-network.csv} dans le dossier \texttt{tmp} à la racine du projet (le processus peut prendre plusieurs minutes). Ce fichier devrait faire environ 50mo.\newline
+
+Ensuite, on peut exécuter la classe \texttt{link.workflow.MBoxAnalyserWF}. Au bout de quelques minutes, lorsque le processus est terminé, on devrait obtenir un fichier \texttt{results.digest} dans le dossier \texttt{tmp}.
+
+\subsection{Évaluation des résultats}
+
+Les résultats peuvent être évalués à l'aide du fichier perl fourni. Il se trouve à la racine du projet. Si le programme a été exécuté avec les paramètres par défaut, la commande à exécuter pour obtenir les résultats de l'évaluation est la suivante :\newline
+
+\texttt{perl evaluator.pl -r data/gold.digest -c tmp/results.digest}
 
 \section{Expériences}
 
-	\subsection{Paramètres}
+\subsection{Paramètres}
 
-	\subsection{Tailles de fenêtre}
+\subsection{Tailles de fenêtre}
 
-		\FloatBarrier
+\FloatBarrier
 
-		\begin{table}[h]
-			\centering
-			\begin{tabular}{l|c|c|c|}
-			\cline{2-4}
-				                   & \textit{Précision} & \textit{Rappel} & \textit{$F_1$} \\ \hline
-			\multicolumn{1}{|l|}{-2 à +2} & \% & \% & \% \\ \hline
-			\multicolumn{1}{|l|}{-3 à +3} & \% & \% & \% \\ \hline
-			\multicolumn{1}{|l|}{-4 à +4} & \% & \% & \% \\ \hline
-			\end{tabular}
-			\caption{Expérimentation avec différentes tailles de fenêtre}
-		\end{table}
+\begin{table}[h]
+	\centering
+	\begin{tabular}{l|c|c|c|}
+	\cline{2-4}
+		                   & \textit{Précision} & \textit{Rappel} & \textit{$F_1$} \\ \hline
+	\multicolumn{1}{|l|}{-2 à +2} & \% & \% & \% \\ \hline
+	\multicolumn{1}{|l|}{-3 à +3} & \% & \% & \% \\ \hline
+	\multicolumn{1}{|l|}{-4 à +4} & \% & \% & \% \\ \hline
+	\end{tabular}
+	\caption{Expérimentation avec différentes tailles de fenêtre}
+\end{table}
 
-	\subsection{Seuils de pertinence collocationnelle}
+\subsection{Seuils de pertinence collocationnelle}
 
-		\FloatBarrier
+\FloatBarrier
 
-		\begin{table}[h]
-			\centering
-			\begin{tabular}{l|c|c|c|}
-			\cline{2-4}
-				                    & \textit{Précision} & \textit{Rappel} & \textit{$F_1$} \\ \hline
-			\multicolumn{1}{|l|}{2} & \% & \% & \% \\ \hline
-			\multicolumn{1}{|l|}{3} & \% & \% & \% \\ \hline
-			\multicolumn{1}{|l|}{4} & \% & \% & \% \\ \hline
-			\end{tabular}
-			\caption{Expérimentation avec différents seuils de pertinence collocationnelle}
-		\end{table}
+\begin{table}[h]
+	\centering
+	\begin{tabular}{l|c|c|c|}
+	\cline{2-4}
+		                    & \textit{Précision} & \textit{Rappel} & \textit{$F_1$} \\ \hline
+	\multicolumn{1}{|l|}{2} & \% & \% & \% \\ \hline
+	\multicolumn{1}{|l|}{3} & \% & \% & \% \\ \hline
+	\multicolumn{1}{|l|}{4} & \% & \% & \% \\ \hline
+	\end{tabular}
+	\caption{Expérimentation avec différents seuils de pertinence collocationnelle}
+\end{table}
 
-		\FloatBarrier
+\FloatBarrier
 
 \section{Discussions}
 
-	\subsection{Approche du problème}
+\subsection{Approche du problème}
 
-	\subsection{Contraintes}
+\subsection{Contraintes}
 
-	\subsection{Le framework UIMA}
+\subsection{Le framework UIMA}
 
-	\subsection{Procédure d'évaluation}
+\subsection{Procédure d'évaluation}
 
 \section{Conclusion}
 
 \section{Appendices}
 
-	\subsection{Sources}
+\subsection{Sources}
 
-		Les sources du programme peuvent être récupérées à l'adresse suivante : \url{https://github.com/bolaft/message-link-detector}
+Les sources du programme peuvent être récupérées à l'adresse suivante : \url{https://github.com/bolaft/message-link-detector}
 
 \end{document}
