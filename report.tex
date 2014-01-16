@@ -15,6 +15,8 @@
 \usepackage{hyperref}
 \usepackage{listings}
 
+\DeclareGraphicsExtensions{.png}
+
 \hypersetup{
     colorlinks=false,
     pdfborder={0 0 0},
@@ -68,6 +70,12 @@
 
 \section{Approche}
 
+L'objectif est d'identifier les liens entre emails au sein d'un thread. Pour ce faire, on cherche à décrire les messages pour les chaînes lexicales qu'ils contiennent, puis de les comparer entre eux pour déterminer s'ils partagent des chaînes.
+
+Les chaînes lexicales sont construites en se basant sur le principe que les mots qui les constituent doivent avoir une forte valeur collocationnelle entre eux, et qu'ils se situent dans la même portion du message.
+
+Pour savoir si deux mots ont une forte valeur collocationnelle, on doit d'abord construire un réseau de collocations à partir d'un corpus traitant des mêmes sujets que les emails que l'on cherche à décrire.
+
 \section{Conception}
 
 \subsection{Worflows}
@@ -114,7 +122,7 @@ Il ne prend pas de paramètre.
 
 La classe \texttt{link.analysisEngine.LexicalChainerAE} construit les chaînes lexicales, les utilise pour lier les emails et exporte le résultat obtenu sur le système de fichiers.
 
-Voici, en pseudo-code, l'algorithme utilisé pour construire les chaines lexicales :
+Voici, en pseudo-code, l'algorithme utilisé pour construire les chaînes lexicales :
 	
 \begin{lstlisting}
 lc = <>
@@ -134,7 +142,7 @@ for (i in [0:size(tokens) - 1]):
 /for
 \end{lstlisting}
 
-Voici, en pseudo-code, l'algorithme utilisé pour sélectionné le mail auquel le mail examiné répond (notez que si on vérifie que l'email examiné est bien plus ancien, c'est superflu avec le fichier MBox utilisé par défaut puisque les JCas y arrivent dans l'ordre chronologique) :
+Voici, en pseudo-code, l'algorithme utilisé pour sélectionné le mail auquel le mail examiné répond :
 
 \begin{lstlisting}
 max = 0.0;
@@ -152,7 +160,7 @@ for (otherMail in thread):
 /for
 \end{lstlisting}
 
-Et voici en pseudo-code l'algorithme utilisé pour la fonction compare(mail, otherMail) (sachant que la méthode pour comparer deux chaines lexicales qui y est utilisée était déjà implémentée de base et ne sera pas détaillé ici) :
+Et voici en pseudo-code l'algorithme utilisé pour la fonction compare(mail, otherMail) (sachant que la méthode pour comparer deux chaînes lexicales qui y est utilisée était déjà implémentée de base et ne sera pas détaillé ici) :
 
 \begin{lstlisting}
 sum = 0.0;
@@ -196,11 +204,13 @@ Les résultats peuvent être évalués à l'aide du fichier perl fourni. Il se t
 
 \texttt{perl evaluator.pl -r data/gold.digest -c tmp/results.digest}
 
-\section{Expériences}
+\section{Expériences et résultats}
 
-\subsection{Paramètres}
+Les expériences ont été effectuées en modifiant deux paramètres : la taille de la fenêtre utilisée pour construire le réseau de collocation (paramètre du Collocation Network Builder) et le seuil de pertinence collocationnelle (\textit{threshold}).
 
 \subsection{Tailles de fenêtre}
+
+Le seuil utilisé pour les expériences sur les tailles de fenêtre est de 3.
 
 \FloatBarrier
 
@@ -209,14 +219,22 @@ Les résultats peuvent être évalués à l'aide du fichier perl fourni. Il se t
 	\begin{tabular}{l|c|c|c|}
 	\cline{2-4}
 		                   & \textit{Précision} & \textit{Rappel} & \textit{$F_1$} \\ \hline
-	\multicolumn{1}{|l|}{-2 à +2} & \% & \% & \% \\ \hline
-	\multicolumn{1}{|l|}{-3 à +3} & \% & \% & \% \\ \hline
-	\multicolumn{1}{|l|}{-4 à +4} & \% & \% & \% \\ \hline
+	\multicolumn{1}{|l|}{-2 à +2} & 68,54\% & 58,95\% & 63,39\% \\ \hline
+	\multicolumn{1}{|l|}{-3 à +3} & 69,14\% & 59,78\% & 64,12\% \\ \hline
+	\multicolumn{1}{|l|}{-4 à +4} & 69,39\% & 60,09\% & 64,41\% \\ \hline
 	\end{tabular}
 	\caption{Expérimentation avec différentes tailles de fenêtre}
 \end{table}
 
+\FloatBarrier
+
+On constate qu'augmenter la taille de la fenêtre améliore légèrement les résultats. Cependant, il faudrait une très grande taille de fenêtre pour pouvoir observer des différences significatives (ici, elles sont de l'ordre de quelques dixièmes de pourcents), et le coût en mémoire et en CPU est trop élevé pour la machine sur laquelle ont été faits les tests.\newline
+
 \subsection{Seuils de pertinence collocationnelle}
+
+Les expériences sur les seuils ont été faites avec une fenêtre de 3.\newline
+
+Notez qu'un seuil de 1 équivaut à aucun seuil, puisque le réseau de collocations ne comporte de toutes façons pas d'entrée de valeur inférieure.
 
 \FloatBarrier
 
@@ -225,28 +243,49 @@ Les résultats peuvent être évalués à l'aide du fichier perl fourni. Il se t
 	\begin{tabular}{l|c|c|c|}
 	\cline{2-4}
 		                    & \textit{Précision} & \textit{Rappel} & \textit{$F_1$} \\ \hline
-	\multicolumn{1}{|l|}{2} & \% & \% & \% \\ \hline
-	\multicolumn{1}{|l|}{3} & \% & \% & \% \\ \hline
-	\multicolumn{1}{|l|}{4} & \% & \% & \% \\ \hline
+	\multicolumn{1}{|l|}{1} & 69,80\% & 60,74\% & 64,95\% \\ \hline
+	\multicolumn{1}{|l|}{2} & 69,37\% & 60,12\% & 64,41\% \\ \hline
+	\multicolumn{1}{|l|}{3} & 69,14\% & 59,78\% & 64,12\% \\ \hline
+	\multicolumn{1}{|l|}{4} & 68,78\% & 59,30\% & 63,69\% \\ \hline
 	\end{tabular}
 	\caption{Expérimentation avec différents seuils de pertinence collocationnelle}
 \end{table}
 
 \FloatBarrier
 
-\section{Discussions}
-
-\subsection{Approche du problème}
-
-\subsection{Contraintes}
-
-\subsection{Le framework UIMA}
-
-\subsection{Procédure d'évaluation}
+Il semble que toutes les occurrences de collocations sont pertinentes : il ne sert donc à rien de limiter les chaînes lexicales aux mots qui ont de fortes valeurs collocationnelles.
 
 \section{Conclusion}
 
+Nous avons proposé une implémentation UIMA Fit d'un système de détection automatique des liens entre emails basé sur la construction et l'utilisation de chaînes lexicales. On obtient une f-mesure allant jusqu'à 64,95\% avec une fenêtre de 3 et aucun seul maximal.
+
+\subsection{Remarques}
+
+\subsubsection{Approche générale}
+
+Il serait intéressant d'essayer de comparer des messages, non pas à partir d'un ensemble de chaînes lexicales, mais à partir de vecteurs de contexte basés uniquement sur les collocations trouvées dans le message. On ignorerait ainsi l'aspect "localisé" des chaînes lexicales, et on se concentrerait sur la similarité lexicale globale des mails.
+
+\subsubsection{Contraintes de l'exercice}
+
+Le problème principal qui a été posé par l'utilisation de fichiers au format MBox et Zim a été la question de l'encodage. Le Collection Reader chargé de lire les fichiers MBox propose bien de choisir l'encodage du fichier d'entrée, mais celà suppose que chaque fichier n'ait qu'un seul encodage. Hors, c'est chaque mail au sein du fichier MBox qui contient l'encodage du mail : on y retrouve donc de l'utf-8, du ISO, du quoted-printable... Certains sont mêmes cryptés avec GPG (le tokenizer coupe donc chaque caractère et propose une suite de milliers de tokens numériques).\newline
+
+Au final l'idée de décoder correctement chaque message a été abandonnée puisque les résultats étaient de toutes façons assez intéressants tel quel. Néanmoins, on peut s'attendre à avoir eu de nettement meilleurs scores si le fichier d'entrée avait été d'un format à encodage unique, puisqu'une grande partie des tokens (au moins un quart) présentaient des problèmes d'encodage et ne pouvaient donc pas être retrouvés dans le réseau de collocations.
+
+\subsubsection{Le framework UIMA}
+
+Les avantages principaux du framework UIMA ont été, pour cette tâche en tous cas, ses capacités de scaling automatique et sa gestion des ressources bien prise en charge. Néanmoins, il s'agit d'un framework Java, et donc les tâches "simples" se sont souvent révélées assez laborieuses (comme la lecture d'un fichier par exemple).
+
 \section{Appendices}
+
+\subsection{Extension à UIMA AS}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{./uima-as_activity_diagram.png}
+\label{overflow}
+\end{figure}
+
+La pièce jointe \texttt{uima-as\_activity\_diagram.png} représente le diagramme d'activité d'une hypothétique implémentation du programme avec UIMA AS.
 
 \subsection{Sources}
 

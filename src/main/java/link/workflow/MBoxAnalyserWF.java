@@ -30,7 +30,7 @@ public class MBoxAnalyserWF {
 	public static void main(String[] args) throws Exception {
 		System.out.printf("%s - started...\n", MBoxAnalyserWF.class.getName());
 		
-		ExternalResourceDescription stopwordListResourceDesc = createExternalResourceDescription(
+		ExternalResourceDescription stopWordsResourceDesc = createExternalResourceDescription(
 			StopwordListModel.class, 
 			new File("data/stopwords-fr.txt")
 		);
@@ -53,7 +53,7 @@ public class MBoxAnalyserWF {
 		// Binding external resource to each Annotator individually
 		AnalysisEngineDescription wordSegmenterAED = createEngineDescription(
 			WordSegmenterAE.class, 
-			WordSegmenterAE.RES_KEY, stopwordListResourceDesc
+			WordSegmenterAE.RES_KEY, stopWordsResourceDesc
 		);
 		
 		AnalysisEngineDescription lexicalChainerAED = createEngineDescription(
