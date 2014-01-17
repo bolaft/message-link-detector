@@ -32,13 +32,13 @@ public class Mail {
 	/**
 	 * Compares the mail to an older one, and updates replyTo and maxReplyToLikelihood values
 	 */
-	public Double compare(Mail other) {		
+	public Double compare(Mail other) {
 		Double sum = 0.0;
 		
-		for (LexicalChain thisLC : other.getDescription()) {
+		for (LexicalChain thisLC : description) {
 			Double max = 0.0;
 			
-			for (LexicalChain otherLC : description) {
+			for (LexicalChain otherLC : other.getDescription()) {
 				Double sim = thisLC.compare(otherLC);
 				
 				if (sim > max) max = sim;
@@ -47,7 +47,7 @@ public class Mail {
 			sum += max;
 		}
 		
-		return sum / (other.getDescription().size() * description.size());
+		return sum / description.size();
 	}
 	
 	/**

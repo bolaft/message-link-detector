@@ -70,7 +70,7 @@ public class LexicalChainerAE extends AbstractAE {
 		Mail replyTo = null;
 		
 		for (Mail m : Mail.mails.get(mail.getThread())) {
-			if (m.getMessage().getDate().before(mail.getMessage().getDate())) {
+			if (m != mail && m.getMessage().getDate().before(mail.getMessage().getDate())) {
 				Double sim = mail.compare(m);
 				
 				if (sim > max) {
